@@ -1,4 +1,4 @@
-// 出片：逐帧取图交给 ffmpeg，配上离线混好的油库里语音和背景音乐 → out/patchouli-lecture-7.mp4（1920×1080，30fps，H.264 + AAC）
+// 出片：逐帧取图交给 ffmpeg，配上离线混好的配音和背景音乐 → out/patchouli-lecture-7.mp4（1920×1080，30fps，H.264 + AAC）
 //   node tools/render.mjs [--jobs 4] [--scale 1] [--out out/xxx.mp4] [--from 0 --to 20]
 // ffmpeg：优先用 PATH 里的，没有就用 FFMPEG 环境变量。
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
@@ -16,7 +16,7 @@ const { DUR, FPS } = first.info, from = +arg('from', 0), to = +arg('to', DUR);
 const F0 = Math.round(from * FPS), F1 = Math.round(to * FPS), N = F1 - F0;
 console.log(`render ${N} frames (${(N / FPS).toFixed(1)}s) × ${jobs} jobs → ${out}`);
 // 背景音乐：页面里用 OfflineAudioContext 渲染同一份乐谱
-const wavB64 = await first.page.evaluate(({ from, dur }) => mixdownWav(from, dur), { from, dur: N / FPS });   // 油库里语音 + 背景音乐，和播放器同一份混音
+const wavB64 = await first.page.evaluate(({ from, dur }) => mixdownWav(from, dur), { from, dur: N / FPS });   // 配音 + 背景音乐，和播放器同一份混音
 writeFileSync(resolve(tmp, 'music.wav'), Buffer.from(wavB64, 'base64'));
 
 const pages = [first];

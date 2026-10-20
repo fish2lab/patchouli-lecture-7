@@ -136,7 +136,7 @@ function buildBar(bar, P) {
   const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   bar.innerHTML = `<button id="pp" title="空格">▶</button><span id="tm">0:00</span>
     <div id="track"><div id="fill"></div>${FILM.T.map(s => `<i style="left:${s.start / FILM.DUR * 100}%"></i>`).join('')}</div>
-    <span id="du">${fmt(FILM.DUR)}</span><button id="vo" class="on" title="油库里语音">🗣 语音</button><button id="snd" class="on" title="背景音乐">♪ 音乐</button><button id="fs" title="全屏">⛶</button>
+    <span id="du">${fmt(FILM.DUR)}</span><button id="vo" class="on" title="配音">🗣 语音</button><button id="snd" class="on" title="背景音乐">♪ 音乐</button><button id="fs" title="全屏">⛶</button>
     <div id="chaps">${FILM.T.map((s, k) => `<button data-k="${k}">${s.title}</button>`).join('')}</div>`;
   const $ = s => bar.querySelector(s), track = $('#track');
   $('#pp').onclick = () => P.toggle();
@@ -161,7 +161,7 @@ function buildBar(bar, P) {
   } };
 }
 
-// ===================== 声音：油库里语音 + 背景音乐 =====================
+// ===================== 声音：配音 + 背景音乐 =====================
 // 语音来自 src/voice-data.js（tools/voice.mjs 生成，没有时静音）。背景音乐是 WebAudio 现场合成的八音盒小曲，有人声时压低。
 // 播放器和出片（tools/render.mjs 用 OfflineAudioContext）走同一个 mixAudio，听到的是一样的。
 const voiceOf = text => (typeof VOICE !== 'undefined' && VOICE[text]) || null;
@@ -174,11 +174,11 @@ async function voiceBuffers(ac) {
 // mixAudio：从全片第 from 秒起、在 ac 的 t0 时刻开始，排好 dur 秒的声音
 async function mixAudio(ac, out, t0, from, dur, { voice = true, bgm = true } = {}) {
   const buf = voice ? await voiceBuffers(ac) : {}, hasVoice = voice && Object.keys(buf).length > 0;
-  // 最后过一个限幅器，AquesTalk 原声峰值就顶到 0 dB，叠上音乐容易爆音
+  // 最后过一个限幅器，人声峰值叠上音乐容易爆音
   const lim = ac.createDynamicsCompressor(); lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .12; lim.connect(out); out = lim;
   if (bgm) { const g = ac.createGain(); g.gain.value = hasVoice ? .45 : 1; g.connect(out); score(ac, g, t0, from, from + dur); }
   if (!hasVoice) return;
-  const vg = ac.createGain(); vg.gain.value = .35; vg.connect(out);
+  const vg = ac.createGain(); vg.gain.value = .5; vg.connect(out);   // 第 7 集 MiMo 配音按 -16 dB 对齐（油库里是 -13 dB、峰值顶满，当时用 .35）
   for (const s of FILM.T) for (const l of s.lines || []) {
     const b = buf[l[2]], at = s.start + l[0]; if (!b || at + b.duration <= from || at >= from + dur) continue;
     const src = ac.createBufferSource(); src.buffer = b; src.connect(vg); src.start(t0 + Math.max(0, at - from), Math.max(0, from - at));
@@ -248,7 +248,7 @@ function scoreBox(ac, out, t0, from = 0, dur = 300) {
 }
 
 // seq：把一串台词按顺序排成 lines。item 是 '文字' 或 ['文字', { mood, who, pause 句前停顿秒, hold 句后多停秒, dur 指定时长 }]
-// 默认时长 = 字数 × 0.17 + 0.8 秒（约 6 字/秒），有油库里语音时至少盖住语音再多 0.35 秒；句间 0.25 秒。
+// 默认时长 = 字数 × 0.17 + 0.8 秒（约 6 字/秒），有配音时至少盖住语音再多 0.35 秒；句间 0.25 秒。
 function seq(t0, items) {
   let t = t0; const out = [];
   for (const it of items) { const [text, o = {}] = Array.isArray(it) ? it : [it]; t += o.pause || 0;

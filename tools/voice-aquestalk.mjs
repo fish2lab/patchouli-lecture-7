@@ -1,6 +1,6 @@
 // 中文油库里语音：把全片台词合成成 AquesTalk 的语音 → src/voice-data.js。按台词的 who 选声音（VOICES）：
 // 帕秋莉 f1（「ゆっくり霊夢」那把声音），琪露诺 f2，八云蓝 f2（第 7 集主讲）。第 7 集面向用过编码 agent 的观众，帕秋莉和蓝都比第 3 集快一些。
-//   node tools/voice.mjs [--list]
+//   node tools/voice-aquestalk.mjs [--list]（第 7 集起默认用 tools/voice.mjs 的 MiMo TTS；想换回油库里就跑这个）
 // 做法和社区的中文油库里一样：汉字 → 拼音（pinyin-pro，带多音字上下文）→ 片假名（平凡社音节表）→ AquesTalk 音声记号。
 // 每句一段 MP3（base64）+ 30fps 响度包络（让帕秋莉按真实语音张嘴）。改了台词就重跑一次，生成的文件要提交。
 // AquesTalk 旧版（免费许可，含商用）；DLL 不单独再分发，这里只发布合成出来的声音，片尾和 README 注明「AquesTalk（株式会社アクエスト）」。
