@@ -99,9 +99,9 @@ function dsBrace(c, x0, x1, y, o = {}) { const { dir = 1, color = P.ink2, w = 3,
 function dsMono(c, text, x, y, o = {}) {
   const { size = 22, color = P.ink, align = 'left', p = 1, al = 1, weight = 400 } = o; if (al <= 0) return;
   const s = String(text), n = p >= 1 ? s.length : Math.floor(s.length * clamp(p, 0, 1) + 1e-6); if (!n) return;
-  c.save(); c.globalAlpha *= al; c.font = `${weight} ${size}px ${DS_MONO}`; c.textBaseline = 'alphabetic'; c.fillStyle = color;
+  c.save(); c.globalAlpha *= al; c.font = `${weight} ${size}px ${DS_MONO}`; c.textRendering = 'optimizeSpeed'; c.textBaseline = 'alphabetic'; c.fillStyle = color;   // optimizeSpeed 关掉连字（=> 不变成 ⇒）
   const full = c.measureText(s).width, x0 = align === 'center' ? x - full / 2 : align === 'right' ? x - full : x; c.textAlign = 'left'; c.fillText(s.slice(0, n), x0, y); c.restore(); }
-function dsMonoW(c, text, size = 22) { c.save(); c.font = `400 ${size}px ${DS_MONO}`; const w = c.measureText(String(text)).width; c.restore(); return w; }
+function dsMonoW(c, text, size = 22) { c.save(); c.font = `400 ${size}px ${DS_MONO}`; c.textRendering = 'optimizeSpeed'; const w = c.measureText(String(text)).width; c.restore(); return w; }
 // dsCode：多行代码。关键字加粗，注释和字符串用灰，o.mark 里的词用强调色，o.hl 的行底下铺一层强调色淡底，o.strike 的行被手画线划掉
 const DS_KW = new Set('const let var return if else await async function export default import from new class extends this of in for while true false null undefined static'.split(' '));
 function dsTok(line) {
@@ -115,7 +115,7 @@ function dsTok(line) {
 function dsCode(c, src, x, y, o = {}) {
   const lines = Array.isArray(src) ? src : String(src).split('\n'), { size = 22, lh = size * 1.55, p = 1, al = 1, hl = {}, mark = [], accent = P.blue, strike = {}, dim = [] } = o;
   const total = lines.reduce((a, l) => a + l.length + 1, 0); let budget = p >= 1 ? Infinity : Math.floor(total * clamp(p, 0, 1));
-  c.save(); c.globalAlpha *= al; c.textBaseline = 'alphabetic'; c.textAlign = 'left'; c.font = `400 ${size}px ${DS_MONO}`; const cw = c.measureText('M').width;
+  c.save(); c.globalAlpha *= al; c.textBaseline = 'alphabetic'; c.textAlign = 'left'; c.textRendering = 'optimizeSpeed'; c.font = `400 ${size}px ${DS_MONO}`; const cw = c.measureText('M').width;
   lines.forEach((ln, i) => { const yy = y + i * lh;
     if (hl[i] > 0) { c.save(); c.globalAlpha *= .2 * clamp(hl[i], 0, 1); c.fillStyle = accent; c.fillRect(x - 10, yy - size * 1.02, ln.length * cw + 20, lh * .95); c.restore(); }
     if (budget > 0) { let xx = x; c.save(); if (dim.includes(i)) c.globalAlpha *= .35;

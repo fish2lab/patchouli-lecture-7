@@ -67,7 +67,7 @@ function m5Code(c, lines, x, y, o = {}) {
   const { size = 19, lh = Math.round(size * 1.5), p = 1, lp = null, al = 1, hl = {}, mark = {}, strike = {}, dim = {}, accent = M5AC } = o; if (al <= 0) return;
   const total = lines.reduce((a, l) => a + [...l].length + 1, 0), F = wt => `${wt} ${size}px ${M5MONO}`;
   let budget = p >= 1 ? Infinity : Math.floor(total * clamp(p, 0, 1) + 1e-6);
-  c.save(); c.globalAlpha *= al; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.save(); c.globalAlpha *= al; c.textBaseline = 'alphabetic'; c.textAlign = 'left'; c.textRendering = 'optimizeSpeed';   // 关掉连字
   lines.forEach((ln, i) => { const yy = y + i * lh, len = [...ln].length;
     let n = lp ? Math.floor(len * clamp(lp[i] ?? 0, 0, 1) + 1e-6) : Math.min(len, budget); if (!lp) budget -= len + 1;
     c.font = F(400); const full = c.measureText(ln).width, ind = c.measureText(ln.slice(0, ln.length - ln.trimStart().length)).width;
