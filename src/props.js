@@ -48,7 +48,9 @@ function dsWin(tau, wins, fi = .35, fo = .45) { let v = 0; for (const [a, b] of 
 
 // ===================== 页面 =====================
 // dsPage：整页旧纸 + 左上角页眉。o = { color 纸色, t0 页眉出现, t1 收起, lines 横格 }
-function dsPage(c, tau, title, o = {}) { paperBg(c, { color: o.color || P.paper, lines: o.lines ?? true }); if (title) pageHeader(c, title, tau, o.t0 ?? .3, { x: 70, y: 86, t1: o.t1 ?? 1e9 }); }
+// 页眉在段末 0.5 秒前淡出，交接画面里不带页眉，下一页的页眉再淡入
+function dsPage(c, tau, title, o = {}) { paperBg(c, { color: o.color || P.paper, lines: o.lines ?? true }); if (!title) return;
+  const sc = FILM.T.find(s => s.start === CLOCK0); pageHeader(c, title, tau, o.t0 ?? .3, { x: 70, y: 86, t1: o.t1 ?? (sc ? sc.dur - .5 : 1e9) }); }
 
 // ===================== 纸片 =====================
 // dsSlip：一张剪纸圆角矩形。o = { color, r, seed, k 弹出 0..1（以中心缩放）, lift 抬起 0..1, al, edge 描一圈颜色, ew, blur, step }
