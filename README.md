@@ -109,12 +109,13 @@ docs/                 教程、经验、各类文档模板
 
 **渲染要多久？** 97 秒的演示片，在 MacBook Air（M5）上开 4 个并行页面约 56 秒（2026-10-08 实测）。
 
-**可以拿去发 B 站 / YouTube / ニコニコ吗？** 代码是 MIT。成片是东方 Project 二次创作，请遵守官方二次创作指南，并在简介注明 AquesTalk 和原曲出处（见下面「许可」）。
+**可以拿去发 B 站 / YouTube / ニコニコ吗？** 代码是 MIT。成片是东方 Project 二次创作，请遵守官方二次创作指南，并在简介注明配音和原曲出处（见下面「许可」）。
 
 ## 许可
 
 - 代码：MIT。
 - 字体：霞鹜文楷（SIL Open Font License，`fonts/LXGWWenKai-OFL.txt`）。`npm run font` 会下载，不进仓库。
-- 语音：AquesTalk（© 株式会社アクエスト），经 [aquestalk.js](https://github.com/y52en/aquestalk.js) 合成；仓库里只有合成出的声音，不含 AquesTalk 本体。发布成片请在片尾或简介注明「AquesTalk（株式会社アクエスト）」。拼音→假名表来自 [yukumo-js](https://github.com/yukumo-group/yukumo-js)（MIT）。
-- 背景音乐：东方红魔乡「ラクトガール ～ 少女密室」（ZUN）的代码改编，音符取自 [touhou-midi-collection](https://github.com/AyHa1810/touhou-midi-collection) 里的 ZUN 原版 MIDI；仓库里只有挑出的音符和我们的编配，不含 MIDI 文件。
+- 语音（第 7 集）：小米 MiMo TTS v2.5 合成（`tools/voice.mjs`，需要环境变量 `MIMO_API_KEY`），音色由文字描述生成后固定成 `tools/voices/` 里的样本，未使用任何真人或声优的声音；发布时注明「AI 合成配音（小米 MiMo TTS）」，投稿勾选 AI 合成声明。
+- 语音（模板原来的油库里版，`tools/voice-aquestalk.mjs`）：AquesTalk（© 株式会社アクエスト），经 [aquestalk.js](https://github.com/y52en/aquestalk.js) 合成；仓库里只有合成出的声音，不含 AquesTalk 本体。发布成片请在片尾或简介注明「AquesTalk（株式会社アクエスト）」。拼音→假名表来自 [yukumo-js](https://github.com/yukumo-group/yukumo-js)（MIT）。
+- 背景音乐（第 7 集）：东方妖妖梦「少女幻葬 ～ Necro-Fantasy」（ZUN）的代码改编，音符取自同一个 MIDI 合集。模板原来的是东方红魔乡「ラクトガール ～ 少女密室」（ZUN）的代码改编，音符取自 [touhou-midi-collection](https://github.com/AyHa1810/touhou-midi-collection) 里的 ZUN 原版 MIDI；仓库里只有挑出的音符和我们的编配，不含 MIDI 文件。
 - 东方 Project 的角色版权归上海爱丽丝幻乐团（ZUN）。使用本模板做的是同人作品，请遵守东方 Project 官方的二次创作指南。

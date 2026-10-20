@@ -15,7 +15,7 @@ const N6CLOSE = N6E(5) - .6;                 // 合书开始
 const N6DUR = N6CLOSE + 6.4;
 const N6AC = P.purple;
 const N6SRC = ['出处', 'deepseek-ai/deepseek-harness（0.2.1-rc.2）', 'docs/architecture.md · cordis-primer.md', 'arXiv 2608.25512 · Koishi v4.7 更新日志',
-  'Claude Code mods 文档 · pi extensions 文档', '鸭哥：深入拆解 DSH · dsh-evolver · dsh-auto-evolve', '配音 AquesTalk（株式会社アクエスト）', 'BGM 少女幻葬 ～ Necro-Fantasy（ZUN）八音盒改编'];
+  'Claude Code mods 文档 · pi extensions 文档', '鸭哥：深入拆解 DSH · dsh-evolver · dsh-auto-evolve', '配音 小米 MiMo TTS（AI 合成，音色由文字描述生成）', 'BGM 少女幻葬 ～ Necro-Fantasy（ZUN）八音盒改编'];
 
 function n6Draw(c, tau, L) {
   const t = tau, toBook = dsK(tau, N6CLOSE, .8, easeIO), close = sm(N6CLOSE + .8, N6CLOSE + 2.2, tau, easeIO);
@@ -49,7 +49,7 @@ function n6Draw(c, tau, L) {
   }
   // ---- 合书 ----
   if (toBook > 0) { c.save(); c.globalAlpha *= toBook;
-    dsBook(c, tau, close, { cover: ['会给自己装插件的 agent', 'DSH 设计拆解 · 上'], small: '帕秋莉讲座 · 第七集' });
+    dsBook(c, tau, close, { cover: [H0TITLE, 'DSH 设计拆解 · 上'], small: '帕秋莉讲座 · 第七集' });
     // 桌上一张出处纸条（合上以后出现）
     const sk = dsK(tau, N6CLOSE + 2.3, .6);
     if (sk > 0) { const x = 150, y = 300; dsSlip(c, x, y, 600, 420, { seed: 8630, k: sk, r: 6 });

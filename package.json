@@ -2,7 +2,7 @@
   "name": "patchouli-lecture-7",
   "private": true,
   "version": "0.1.0",
-  "description": "帕秋莉讲座第 7 集：会给自己装插件的 agent——DeepSeek Harness 设计拆解（上）。纯 JavaScript + Canvas 2D 绘制的剪纸东方同人科普视频，油库里配音，八云蓝角色曲八音盒 BGM",
+  "description": "帕秋莉讲座第 7 集：连 agent loop 都是插件——DeepSeek Harness 设计拆解（上）。纯 JavaScript + Canvas 2D 绘制的剪纸东方同人科普视频，小米 MiMo TTS 配音，八云蓝角色曲八音盒 BGM",
   "keywords": [
     "touhou",
     "touhou-project",
