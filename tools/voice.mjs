@@ -6,7 +6,7 @@
 // 台词放 assistant 消息，这句的语气（角色底色 + mood）写在 user 消息里。不在台词里加「(风格)」标签：clone 模型会把标签后面念坏。
 // 念不准的英文词在 SAY 里换成好念的写法，只改送去合成的字，字幕不变。
 // 合成结果缓存在 out/voice-cache/（按 模型 + 参考音色 + 语气 + 文字 取哈希），改一句只重合成这一句；--redo 连缓存一起重来。
-// 后期：切掉首尾静音，按有声部分的响度对齐到 TARGET_DB（峰值不超过 -1 dB），编成 24 kHz 单声道 MP3；再算 30fps 响度包络给角色张嘴。
+// 后期：按角色变速（tempo），切掉首尾静音，按有声部分的响度对齐到 TARGET_DB（峰值不超过 -1 dB），编成 24 kHz 单声道 MP3；再算 30fps 响度包络给角色张嘴。
 // 平台对每个账号限并发，这里一句一句串行请求，遇到 429 退避重试。MiMo TTS 现在限时免费，key 只从环境变量读，不进仓库。
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -19,16 +19,17 @@ const has = k => process.argv.includes('--' + k);
 const FF = process.env.FFMPEG || 'ffmpeg', API = 'https://api.xiaomimimo.com/v1/chat/completions', KEY = process.env.MIMO_API_KEY;
 const SR = 24000, TARGET_DB = -16, PEAK = .89;
 
-// 角色：design 是音色描述（只在 --design 时用），sample 是设计音色时念的那段话；style 是每句都带上的语气底色
+// 角色：design 是音色描述（只在 --design 时用），sample 是设计音色时念的那段话；style 是每句都带上的语气底色；
+// tempo 是后期变速（ffmpeg atempo，不变调）：MiMo 念得比油库里慢，整片按 8 分钟版收一点，控制在 1.1 以内
 const VOICES = {
   ran: {
     design: '知性冷静的年轻女性，声音清亮干练、略低沉，思路极快、条理分明，讲解时不紧不慢却很笃定，像一位擅长推演和计算的参谋在复盘方案。语速中等，重音落在关键词上，句尾干脆收住。',
     sample: '大多数 harness 里，它是写死的。在 DSH 里，它也只是一个插件。第一步，先把这一圈拆开来看。',
-    style: '在给懂行的朋友讲解技术：语气平和笃定、条理清楚，像聊天一样自然，语速中等偏快。' },
+    style: '在给懂行的朋友讲解技术：语气平和笃定、条理清楚，像聊天一样自然，语速中等偏快。', tempo: 1.1 },
   patchouli: {
     design: '体弱、文静的少女，声音软糯偏轻，带一点鼻音和气息感，像刚从书堆里抬起头，懒洋洋地问问题，语气里有一点不耐烦又有一点好奇。语速慢。',
     sample: 'ReAct 那种「想一步、做一步」的循环呢？……这一圈本身，是谁写死的？',
-    style: '在向讲解的人提问：声音轻、语气平淡，带一点慵懒和好奇，语速中等。' },
+    style: '在向讲解的人提问：声音轻、语气平淡，带一点慵懒和好奇，语速中等。', tempo: 1.05 },
 };
 const MOODS = { happy: '带一点轻快的笑意', proud: '从容笃定，带一点得意', awkward: '有点无奈', surprised: '有点意外', smug: '带一点调侃',
   annoyed: '略带不满地追问', flustered: '有点着急', smile: '轻松满足', sad: '有点低落' };
@@ -53,7 +54,7 @@ async function tts(model, text, user, voice) {
 
 // ---- 声音处理 ----
 const wavPcm = wav => { let o = 12; while (o < wav.length - 8) { const id = wav.toString('ascii', o, o + 4), n = wav.readUInt32LE(o + 4); if (id === 'data') return new Int16Array(wav.buffer.slice(wav.byteOffset + o + 8, wav.byteOffset + o + 8 + (n & ~1))); o += 8 + n; } throw new Error('不是 WAV'); };
-const toF32 = buf => { const raw = execFileSync(FF, ['-v', 'error', '-i', '-', '-f', 's16le', '-ac', '1', '-ar', String(SR), '-'], { input: buf, maxBuffer: 1 << 28 }); return Float32Array.from(new Int16Array(raw.buffer, raw.byteOffset, raw.length >> 1), v => v / 32768); };
+const toF32 = (buf, tempo = 1) => { const raw = execFileSync(FF, ['-v', 'error', '-i', '-', ...(tempo !== 1 ? ['-af', `atempo=${tempo}`] : []), '-f', 's16le', '-ac', '1', '-ar', String(SR), '-'], { input: buf, maxBuffer: 1 << 28 }); return Float32Array.from(new Int16Array(raw.buffer, raw.byteOffset, raw.length >> 1), v => v / 32768); };
 const frameDb = (x, hop) => { const out = []; for (let i = 0; i + hop <= x.length; i += hop) { let s = 0; for (let j = i; j < i + hop; j++) s += x[j] * x[j]; out.push(10 * Math.log10(s / hop + 1e-12)); } return out; };
 // 切首尾静音（前留 60 ms、后留 150 ms），响度对齐，峰值封顶
 function polish(x) {
@@ -100,7 +101,7 @@ for (const l of lines) {
   const key = createHash('sha1').update([model, refs[l.who].hash, user, text].join('\n')).digest('hex').slice(0, 16), f = resolve(cacheDir, key + '.wav');
   const redo = has('redo') && (!only || l.text.includes(only));
   if (!existsSync(f) || redo) { process.stdout.write(`合成 [${l.who}] ${l.text}\n`); writeFileSync(f, await tts(model, text, user, refs[l.who].url)); fresh++; }
-  raw[l.text] = polish(toF32(readFileSync(f))); done++;
+  raw[l.text] = polish(toF32(readFileSync(f), VOICES[l.who].tempo)); done++;
 }
 // 30fps 响度包络（全片最大值 = 9 档），给角色按真实语音张嘴
 const VOICE = {}, hop = SR / 30; let peak = 0; const envs = {};
