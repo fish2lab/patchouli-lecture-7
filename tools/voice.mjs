@@ -1,5 +1,5 @@
 // 中文油库里语音：把全片台词合成成 AquesTalk 的语音 → src/voice-data.js。按台词的 who 选声音（VOICES）：
-// 帕秋莉 f1（「ゆっくり霊夢」那把声音），琪露诺 f2。
+// 帕秋莉 f1（「ゆっくり霊夢」那把声音），琪露诺 f2，八云蓝 f2（第 7 集主讲）。第 7 集面向用过编码 agent 的观众，帕秋莉和蓝都比第 3 集快一些。
 //   node tools/voice.mjs [--list]
 // 做法和社区的中文油库里一样：汉字 → 拼音（pinyin-pro，带多音字上下文）→ 片假名（平凡社音节表）→ AquesTalk 音声记号。
 // 每句一段 MP3（base64）+ 30fps 响度包络（让帕秋莉按真实语音张嘴）。改了台词就重跑一次，生成的文件要提交。
@@ -15,7 +15,7 @@ import { openFilm, ROOT } from './browser.mjs';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : process.argv[i + 1]; };
 const FF = process.env.FFMPEG || 'ffmpeg';
-const VOICES = { patchouli: { voice: 'f1', speed: 110 }, cirno: { voice: 'f2', speed: 115 } };   // 第 3 集第三稿放慢（原 120 / 125），照顾没有基础的观众
+const VOICES = { patchouli: { voice: 'f1', speed: 116 }, cirno: { voice: 'f2', speed: 115 }, ran: { voice: 'f2', speed: 120 } };   // 第 3 集第三稿放慢（原 120 / 125），照顾没有基础的观众
 
 // ---- 中文 → 音声记号 ----
 const DIG = '零一二三四五六七八九';
@@ -35,7 +35,12 @@ const numbers = t => t.replace(/(\d{4})(?=\s*年)/g, y => [...y].map(d => DIG[d]
   .replace(/\d+/g, n => cnInt(+n));
 // 拼音表里没有的词：拉丁字母、口癖
 const WORDS = { 'AI': 'エーアイ', 'JavaScript': 'ジャバスクリプト', 'Q': 'キュー', 'buff': 'バフ', 'WHO': 'ダブリューエイチオー', 'delta': 'デルタ', 'PNG': 'ピーエヌジー', 'FLAC': 'フラック',
-  '得你': 'デイニー', '你得': 'ニーデイ' };   // 「得」读 děi 的地方（pinyin-pro 按 de 读）
+  '得你': 'デイニー', '你得': 'ニーデイ',   // 「得」读 děi 的地方（pinyin-pro 按 de 读）
+  // 第 7 集：DeepSeek Harness 的词
+  'QQ': 'キューキュー', 'bot': 'ボット', 'Koishi': 'コイシ', 'DeepSeek': 'ディープシーク', 'agent': 'エージェント', 'harness': 'ハーネス', 'DSH': 'ディーエスエイチ',
+  'Cordis': 'コーディス', 'ReAct': 'リアクト', 'step': 'ステップ', 'turn': 'ターン', 'skill': 'スキル', 'MCP': 'エムシーピー', 'settings': 'セッティングス', 'hook': 'フック',
+  'pi': 'パイ', 'extension': 'エクステンション', 'Claude Code': 'クロードコード', 'Claude': 'クロード', 'mod': 'モッド', 'next': 'ネクスト', 'loop': 'ループ', 'inject': 'インジェクト',
+  'PTC': 'ピーティーシー', 'Plugin Manager': 'プラグインマネージャー', 'auto-evolve': 'オートエボルブ', 'evolver': 'エボルバー', 'block': 'ブロック', 'reload': 'リロード', '重载': 'チョンザイ' };
 const WORDS_RE = new RegExp(Object.keys(WORDS).sort((a, b) => b.length - a.length).join('|'), 'g');
 function toKoe(text) {
   const src = numbers(text).replace(WORDS_RE, m => `<${m}>`), out = [];

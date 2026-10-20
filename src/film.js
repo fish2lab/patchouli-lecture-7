@@ -7,12 +7,13 @@
   OVERLAY = (c, s, tau, cur) => { if (s.start > 0 && !s.noFlip) turnPage(c, tau / .8); if (!noSub && cur && !s.noSub) drawSubtitle(c, cur, tau); };
   mountPlayer();
 }
-// 字幕（第二版）：书页底部一条剪下来的纸条，上面一行手写字。说话人不是帕秋莉时前面加名字。
-const WHO_NAME = { cirno: '琪露诺' };
+// 字幕（第二版）：书页底部一条剪下来的纸条，上面一行手写字。说话人不是本集主讲人（props.js 的 EP_HOST，默认帕秋莉）时前面加名字。
+const WHO_NAME = { cirno: '琪露诺', patchouli: '帕秋莉', ran: '八云蓝' };
 function drawSubtitle(c, cur, tau) {
   const a = Math.min(sm(cur.t0, cur.t0 + .12, tau), 1 - sm(cur.t1 - .1, cur.t1, tau));
   if (a <= 0) return;
-  const size = 44, who = cur.o.who && cur.o.who !== 'patchouli' ? (WHO_NAME[cur.o.who] || cur.o.who) + '：' : '', text = who + cur.text;
+  const host = typeof EP_HOST !== 'undefined' ? EP_HOST : 'patchouli', sp = cur.o.who || 'patchouli';
+  const size = 44, who = sp !== host ? (WHO_NAME[sp] || sp) + '：' : '', text = who + cur.text;
   const tw = zhWidth(c, text, size), bw = Math.min(W - 160, tw + 70), bx = CX - bw / 2, by = STAGE.sub.y - size - 8, bh = size + 36;
   c.save(); c.globalAlpha = a;
   cutPaper(c, [[bx, by + 3], [bx + bw, by], [bx + bw - 6, by + bh], [bx + 5, by + bh - 2]], '#f7f3ea', { seed: 7 + Math.floor(cur.t0 * 10), step: 40, blur: 6 });
@@ -36,12 +37,12 @@ function pageFlip(c, tau) {
   c.restore();
 }
 // 穿模检查（开发用）：?bbox 在两人身上画红框；?nochar 不画人物、只记包围框（tools/overlap.mjs 用）。
-// 包围框按锚点和身高估：帕秋莉宽 0.5h，琪露诺连翅膀宽 0.7h；在当前变换下换算成屏幕坐标，记进 __boxes。
+// 包围框按锚点和身高估：帕秋莉宽 0.5h，琪露诺连翅膀宽 0.7h，八云蓝连尾巴宽 0.8h；在当前变换下换算成屏幕坐标，记进 __boxes。
 if (Q.has('bbox') || Q.has('nochar')) {
-  const noChar = Q.has('nochar'), W0 = { patchouli: .5, cirno: .7 };
+  const noChar = Q.has('nochar'), W0 = { patchouli: .5, cirno: .7, ran: .8 };
   window.__boxes = [];
   const wrap = (fn, who) => (c, o = {}) => {
-    const h = o.h || (who === 'cirno' ? 460 : 520), w = h * W0[who], x = o.x || 0, y = o.y || 0, m = c.getTransform(), al = c.globalAlpha;
+    const h = o.h || (who === 'cirno' ? 460 : who === 'ran' ? 500 : 520), w = h * W0[who], x = o.x || 0, y = o.y || 0, m = c.getTransform(), al = c.globalAlpha;
     const pts = [[x - w / 2, y - h], [x + w / 2, y - h], [x - w / 2, y], [x + w / 2, y]].map(([px, py]) => [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f]);
     const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     if (al > .3) __boxes.push({ who, x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) });
@@ -49,5 +50,5 @@ if (Q.has('bbox') || Q.has('nochar')) {
     if (Q.has('bbox')) { c.save(); c.setTransform(m); c.strokeStyle = '#e00'; c.lineWidth = 3; c.strokeRect(x - w / 2, y - h, w, h); c.restore(); }
     return r;
   };
-  drawPatchouli = wrap(drawPatchouli, 'patchouli'); drawCirno = wrap(drawCirno, 'cirno');
+  drawPatchouli = wrap(drawPatchouli, 'patchouli'); drawCirno = wrap(drawCirno, 'cirno'); drawRan = wrap(drawRan, 'ran');
 }
