@@ -170,12 +170,12 @@ function dsCast(c, tau, L, LINES, o = {}) {
 const DS_LOOPCARD = { x: 700, y: 430, w: 420, h: 190 };   // 和第 1 段末尾收成的那张纸片同一个位置
 function dsLoopCard(c, x, y, w, h, o = {}) { const { k = 1, al = 1, seed = 7900, lift = 0, accent = P.blue } = o; if (k <= .001 || al <= 0) return;
   pop(c, x + w / 2, y + h / 2, k, () => { c.save(); c.globalAlpha *= al;
-    dsSlip(c, x, y, w, h, { color: mix(DSC.slip, accent, .12), seed, lift });
-    const cx = x + w / 2, cy = y + h * .4, r = h * .2;
+    dsSlip(c, x, y, w, h, { color: mix(DSC.slip, accent, .12), seed, lift }); c.translate(0, -lift * 8);   // 圈和字跟着纸抬
+    const fs = Math.min(24, h * .23), cx = x + w / 2, cy = y + h * .36, r = h * .2;
     rline(c, Array.from({ length: 26 }, (_, i) => { const a = -Math.PI / 2 + .3 + i / 25 * (TAU - .9); return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; }), { w: 3, color: accent, seed: seed + 1, amp: .5 });
     const ea = -Math.PI / 2 + .3 + (TAU - .9), ex = cx + Math.cos(ea) * r, ey = cy + Math.sin(ea) * r, tg = ea + Math.PI / 2;
     rline(c, [[ex - Math.cos(tg - .5) * 12, ey - Math.sin(tg - .5) * 12], [ex, ey], [ex - Math.cos(tg + .5) * 12, ey - Math.sin(tg + .5) * 12]], { w: 3, color: accent, seed: seed + 2, amp: .4 });
-    dsMono(c, 'agent loop', cx, y + h - 26, { size: 24, align: 'center', color: P.ink }); c.restore(); }); }
+    dsMono(c, 'agent loop', cx, y + h - Math.max(h * .14, 18), { size: fs, align: 'center', color: P.ink }); c.restore(); }); }
 function dsHoLoopCard(c, o = {}) { const B = DS_LOOPCARD; dsLoopCard(c, B.x, B.y, B.w, B.h, o); }
 
 // ===================== 第 2 段的主物件：三级纸台阶（第 3 段开头、第 6 段也用） =====================

@@ -45,15 +45,13 @@ const D2NEW = [800, 330, 240];                         // Claude 写的新处理
 const D2CODE_SRC = ["on('tool.call', { tool: 'Bash' }, async ($, e, next) => {", '  if (/git push .*--force/.test(e.command)) {', "    return { deny: 'Force pushes are not allowed…' }", '  }', '  return next(e)', '})'];
 
 const d2Mix = (a, b, u) => a.map((v, i) => lerp(v, b[i], u));
-const d2Mid = r => [r[0] + r[2] / 2, r[1] + r[3] / 2];
 
 // ===================== 小画具 =====================
 // d2Card：agent loop 纸片。不抬起时直接用 props.js 的 dsLoopCard（交接画面一模一样）；抬起时整张一起抬（dsLoopCard 只抬纸不抬字）
 function d2Card(c, r, o = {}) { const [x, y, w, h] = r, { lift = 0, k = 1, squash = 0 } = o; if (k <= .001) return;
   c.save(); if (squash) { c.translate(0, y + h); c.scale(1 + squash * .06, 1 - squash * .1); c.translate(0, -(y + h)); }
   if (lift <= .001) dsLoopCard(c, x, y, w, h, { k });
-  else { c.save(); c.translate(0, -lift * 10); dsSlip(c, x, y, w, h, { color: mix(DSC.slip, P.blue, .12), seed: 7900, lift: 0, k, }); c.restore();
-    // 影子随抬起变大：在纸片下面先垫一层淡影
+  else { c.save(); c.translate(0, -lift * 10); dsSlip(c, x, y, w, h, { color: mix(DSC.slip, P.blue, .12), seed: 7900, k }); c.restore();
     pop(c, x + w / 2, y + h / 2, k, () => { c.save(); c.translate(0, -lift * 10);
       const cx = x + w / 2, cy = y + h * .4, rr = h * .2;
       rline(c, Array.from({ length: 26 }, (_, i) => { const a = -Math.PI / 2 + .3 + i / 25 * (TAU - .9); return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]; }), { w: 3, color: P.blue, seed: 7901, amp: .5 });
@@ -87,10 +85,10 @@ function d2Socket(c, x, y, s, o = {}) { const { k = 1, plug = 0, seed = 7980 } =
   pop(c, x, y, k, () => { cutPaper(c, rectPts(x - s / 2, y - s / 2, s, s, 5), mix(P.g3, P.paper, .25), { seed, step: 8, shadow: false, grain: .05 });
     c.save(); c.strokeStyle = alpha(P.ink, .35); c.lineWidth = 1.5; c.strokeRect(x - s / 2 + 2, y - s / 2 + 2, s - 4, s - 4); c.restore();
     if (plug > 0) pop(c, x, y, plug, () => cutPaper(c, rectPts(x - s * .34, y - s * .34, s * .68, s * .68, 3), mix(DSC.slip, D2AC, .5), { seed: seed + 1, step: 6, blur: 2, sx: 1, sy: 1.5 })); }); }
-// d2TextRows：SKILL.md 上几行「字」（灰色的词块）
-function d2Rows(x, y, seed) { return [0, 1, 2, 3].map(r => { const out = []; let xx = x; const n = 3 + Math.floor(hash(r, seed) * 2), total = [150, 168, 112, 156][r];
+// d2Rows：SKILL.md 上四行「字」（灰色的词块），x 是行首
+function d2Rows(x, seed) { return [0, 1, 2, 3].map(r => { const out = []; let xx = x; const n = 3 + Math.floor(hash(r, seed) * 2), total = [150, 168, 112, 156][r];
   for (let k = 0; k < n; k++) { const wd = total / n * (.7 + hash(r * 7 + k, seed + 1) * .5) - 8; out.push([xx, xx + wd]); xx += wd + 12; } return out; }); }
-const D2ROWS = d2Rows(D2SK[0] + 26, 0, 7990);
+const D2ROWS = d2Rows(D2SK[0] + 26, 7990);
 
 // ===================== 每一段的时刻 =====================
 // 台阶立起 / 亮起 / 纸条
@@ -123,7 +121,12 @@ function d2Draw(c, tau, L) {
   // ---- 主物件：三级台阶 ----
   if (end) dsHoStairs(c);
   else dsStairs(c, { up: d2Up(tau), lit: d2Lit(tau), notes: d2Notes(tau), hi: dsK(tau, D2W(13, '越往上') - .1, .6), accent: D2AC, t });
-  if (!end) { d2Tier1(c, tau); d2Tier2(c, tau); d2Loops(c, tau); }
+  if (!end) {
+    // 念到每一级的代表（skill · MCP · hook 等）时，台阶上那行小字底下手画一道紫线，下一句淡掉
+    [[1, 'skill', 2], [5, 'pi', 6], [12, 'DSH', 13]].forEach(([li, w, nx], i) => { const a = 1 - dsK(tau, D2T(nx) - .3, .3); if (a <= 0) return;
+      const p = dsK(tau, D2W(li, w) - .1, 1.1, x => x); if (p <= 0) return; const S = DS_STAIR, cx = (S.xs[i] + S.xs[i + 1]) / 2, hw = dsMonoW(c, S.rows[i][1], 17) / 2 + 4, y = S.top[i] + 100;
+      rline(c, [[cx - hw, y], [cx + hw, y - 2]], { w: 2.6, color: D2AC, p, seed: 8300 + i, amp: .6, al: a }); });
+    d2Tier1(c, tau); d2Tier2(c, tau); d2Loops(c, tau); }
   // ---- 人物 ----
   dsCast(c, tau, L, D2LINES, {
     ranPose: tt => tt < D2T(0) ? 'present' : tt > D2E(13) - .05 ? 'stand' : (tt > D2T(3) - .2 && tt < D2T(4)) || (tt > D2T(10) - .2 && tt < D2T(11)) ? 'stand' : tt > D2T(8) && tt < D2T(9) ? 'read' : 'point',
@@ -217,7 +220,7 @@ function d2Tier2(c, tau) {
       const a2 = dsK(tau, iB - .75, .25) * (1 - dsK(tau, iB + .75, .3)), go = key(tau, [[iB - .72, x0], [iB - .08, s1x], [iB + .3, s1x], [iB + 1, bx + bw - 44]], easeIO);
       if (a2 > 0) dsToken(c, go, cy - dsBump(tau, iB - .05, .35) * 10, 13, mix(P.moon, D2AC, dsK(tau, iB, .25)), { al: a2 * g6, seed: 8151 }); }
     // 第 7–10 句：tool.call 的处理器链（拉远时缩回第一个口子）
-    if (pb < 1) { const [s0x, s0y] = d2SockXY(band, 0); pop(c, s0x, s0y, 1 - pb, () => d2ChainDraw(c, tau, band)); }
+    if (pb < 1) { const [s0x, s0y] = d2SockXY(band, 0); pop(c, s0x, s0y, 1 - sm(0, .6, pb, x => x), () => d2ChainDraw(c, tau, band)); }
     // 第 11 句：官方预留
     const q0 = Math.max(D2W(11, '官方预留') - .05, D2T(11) + .55), qk = dsPop(tau, q0);
     if (qk > 0) { const [a] = d2SockXY(band, 0), [b] = d2SockXY(band, 2);

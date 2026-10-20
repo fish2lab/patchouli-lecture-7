@@ -35,12 +35,12 @@ const C3RT = { x: 810, y: 640, w: 220, h: 90 }, C3ANC = [920, 730];   // 根纸�
 const C3NW = 180, C3NH = 76;
 const C3SL = [-165, -135, -105, -75, -45, -15].map(a => [920 + Math.cos(a * Math.PI / 180) * 420, 650 + Math.sin(a * Math.PI / 180) * 420]);
 const C3PIN = (x, y, s = 1) => [x, y + (C3NH / 2 - 13) * s];          // 纸片底边中间的钉（树上的线拴在这儿）
-const C3RPIN = x => [920 + (x - 920) * .2, 654];                       // 根上的钉：每根线一颗，沿根的上沿排开
+const C3RPIN = i => [850 + i * 28, 654];                                // 根上的钉：每根线一颗，按位置沿根的上沿排开
 // ---- 推近以后的 test-gate、它身上的三张符、「别的插件」----
-const C3F = { x: 590, y: 330, s: 1.6 };
+const C3F = { x: 590, y: 380, s: 1.6 };
 const C3TAL = [['注册工具', -72, -.05], ['监听事件', 0, .03], ['副作用', 72, -.03]];   // [字, 相对 test-gate 中心的 x, 歪一点]
-const C3TALY = 446, C3TW = 56, C3TH = 166;
-const C3OTH = { x: 1010, y: 332, w: 240, h: 92 };
+const C3TALY = 496, C3TW = 56, C3TH = 166;
+const C3OTH = { x: 1010, y: 382, w: 240, h: 92 };
 const C3CODE = ['register(label, hooks, callback, options) {', "  const method = options.prepend ? 'unshift' : 'push'", '  return this.ctx.fiber.effect(() => {',
   '    hooks[method]({ ctx: this.ctx, callback, ...options })', '    return () => this.unregister(hooks, callback)', '  }, label)', '}'];
 // ---- Koishi 的小树（第 11–13 句，左边）：根和 dsCordisSlab(sub: null) 同一张纸，好让复制出来的那张和它一模一样 ----
@@ -51,7 +51,8 @@ const C3LAND = { x: 980, y: 743, w: 200, h: 84 };      // 复制的 Cordis 落�
 
 // ===================== 时间 =====================
 const c3Fo = tau => dsK(tau, C3W(1, '插件') - .15, .45, easeIO);                      // 推近 test-gate
-const c3Uf = tau => dsK(tau, C3T(7) - .35, .45, easeIO);                              // 拉回整棵树
+const c3Uf = tau => dsK(tau, C3T(7) - .2, .4, easeIO);                                // 拉回整棵树（推近层先收走）
+const c3Fout = tau => dsK(tau, C3T(7) - .55, .3);
 const c3Yank = tau => dsK(tau, C3W(3, '拔掉') - .2, .4, easeIn) * (1 - dsK(tau, C3T(4) + .15, .45, easeOut));   // 硬拔，第 4 句倒回去
 const c3Stick = i => i < 2 ? C3W(2, ['注册', '监听'][i]) - .05 : C3W(2, '监听') + .55;
 const c3Peel = i => C3W(6, '一张张') - .1 + (2 - i) * .45;                          // 3、2、1 依次揭掉
@@ -128,15 +129,18 @@ function c3TG(tau) {
   const f = c3Fo(tau), [sx, sy] = C3SL[1], yk = c3Yank(tau), ul = dsK(tau, c3Unload(), .45);
   let x = lerp(sx, C3F.x, f), y = lerp(sy, C3F.y, f), s = lerp(1, C3F.s, f), rot = 0, al = 1, lift = 0;
   if (yk > 0) { x -= 90 * yk; y -= 640 * yk; rot = -.55 * yk; lift = Math.min(1, yk * 3); }
+  // 第 7 句开头：卸干净的 test-gate（灰）缩回树上原来的位置，整棵树在它周围回来，然后它淡掉（consumer 之后长在这个位置）
+  const back = dsK(tau, C3T(7) - .5, .45, easeIO);
+  if (back > 0) { x = lerp(x, sx, back); y = lerp(y, sy, back); s = lerp(s, 1, back); al = 1 - dsK(tau, C3T(7) + .15, .4); }
   return { x, y, s, rot, al, lift, dim: ul };
 }
 function c3Tree(c, tau, m, lc, treeA) {
   const X = c3Xf(tau), f = c3Fo(tau);
-  c.save(); c.globalAlpha *= treeA * (1 - sm(.55, .95, c3Cp(tau)));
+  c.save(); c.globalAlpha *= treeA * (1 - sm(.15, .6, c3Cp(tau)));
   c.translate(X.ax, X.ay); c.scale(X.s, X.sy); c.translate(-C3ANC[0], -C3ANC[1]);
   c3Root(c, m); const rootPin = sm(.8, 1, m);
   const slips = [], ropes = [], pins = [];
-  const node = (name, slot, o, thr, tAl = 1) => { const [x, y] = slot; slips.push([x, y, name, o]); if (thr > 0) ropes.push([C3RPIN(x), C3PIN(x, y), thr, tAl]); if ((o.k ?? 1) > .3 && (o.al ?? 1) > .05) pins.push([C3PIN(x, y), o.al ?? 1]); };
+  const node = (name, slot, o, thr, tAl = 1) => { const [x, y] = slot; slips.push([x, y, name, o]); if (thr > 0) ropes.push([C3RPIN(C3SL.indexOf(slot)), C3PIN(x, y), thr, tAl]); if ((o.k ?? 1) > .3 && (o.al ?? 1) > .05) pins.push([C3PIN(x, y), o.al ?? 1]); };
   // 第 0 句：树长出来（agent-loop 是第 2 段的 agent loop 纸片落下来变成的）
   const g = { loop: C3W(0, '循环') + .5, tools: 1.6, llm: 1.85, sess: 2.1, test: Math.max(2.4, C3W(0, '拔错') - .15) };
   node('agent-loop', C3SL[3], { al: sm(.35, .9, lc), seed: 3103 }, dsK(tau, g.loop, .3));
@@ -145,7 +149,7 @@ function c3Tree(c, tau, m, lc, treeA) {
   node('sessions', C3SL[5], { svc: true, k: dsPop(tau, g.sess + .22), seed: 3105 }, dsK(tau, g.sess, .3));
   // test-gate：推近之前画在树上；推近以后由推近层画，这里只画根到它的线（线头跟着它走）
   if (f <= 0) node('test-gate', C3SL[1], { k: dsPop(tau, g.test + .22), seed: 3101 }, dsK(tau, g.test, .3));
-  else if (f < 1) { const T = c3TG(tau); ropes.push([C3RPIN(C3SL[1][0]), c3Loc(T.x, T.y, T.s, 0, 0, C3NH / 2 - 13), 1, 1]); }
+  else if (f < 1) { const T = c3TG(tau); ropes.push([C3RPIN(1), c3Loc(T.x, T.y, T.s, 0, 0, C3NH / 2 - 13), 1, 1]); }
   // 第 7–8 句：consumer（inject greeter）和 greeter
   const tC = C3W(7, '插件') - .15, tG = C3W(7, '服务') - .2;
   const lit = clamp(dsK(tau, C3W(8, '启动') - .1, .3) - dsK(tau, C3W(8, '停下') - .3, .3) + dsK(tau, C3W(8, '重新加载') - .1, .3), 0, 1);
@@ -154,7 +158,7 @@ function c3Tree(c, tau, m, lc, treeA) {
   const [gx0, gy0] = C3SL[0], gx = lerp(gx0, 330, away), gy = lerp(gy0, 700, away);
   if (tau > tC) node('consumer', C3SL[1], { k: dsPop(tau, tC + .22), dim: .85 * (1 - lit), hi: cHi, seed: 3106 }, dsK(tau, tC, .3));
   if (tau > tG) { slips.push([gx, gy, 'greeter', { svc: true, k: dsPop(tau, tG + .22), lift: away * .9, al: 1 - .4 * away, seed: 3107 }]);
-    ropes.push([C3RPIN(gx0), C3PIN(gx0, gy0), dsK(tau, tG, .3) * (1 - sm(0, .6, away)), 1]); if (tau > tG + .3) pins.push([[gx, gy + C3NH / 2 - 13 - away * 7], 1 - .4 * away]); }
+    ropes.push([C3RPIN(0), C3PIN(gx0, gy0), dsK(tau, tG, .3) * (1 - sm(0, .6, away)), 1]); if (tau > tG + .3) pins.push([[gx, gy + C3NH / 2 - 13 - away * 7], 1 - .4 * away]); }
   // 画：纸片 → 线 → 钉
   if (away > 0) dsDashBox(c, gx0 - C3NW / 2, gy0 - C3NH / 2, C3NW, C3NH, { al: sm(.4, 1, away), r: 12, t: tau, seed: 3110 });
   for (const [x, y, name, o] of slips) c3Plug(c, x, y, name, o);
@@ -177,8 +181,10 @@ function c3Focus(c, tau, FA) {
   if (oK > 0 && oA > 0) c3Plug(c, O.x, O.y, '别的插件', { w: O.w, h: O.h, k: oK, al: oA, zhName: true, size: 30, seed: 3120 });
   // 硬拔以后：原地一个虚线框（拔走的那张纸片的位置）
   const gA = sm(.3, .8, yk); if (gA > 0) dsDashBox(c, C3F.x - C3NW * C3F.s / 2, C3F.y - C3NH * C3F.s / 2, C3NW * C3F.s, C3NH * C3F.s, { al: gA, r: 16, t, seed: 3130, color: P.g2 });
-  // test-gate 本身
-  c3Plug(c, T.x, T.y, 'test-gate', { s: T.s, rot: T.rot, lift: T.lift, dim: .8 * T.dim, seed: 3101 });
+  c.restore();
+  // test-gate 本身（不跟着推近层一起淡，见 c3TG）
+  c3Plug(c, T.x, T.y, 'test-gate', { s: T.s, rot: T.rot, lift: T.lift, dim: .8 * T.dim, al: T.al, seed: 3101 });
+  c.save(); c.globalAlpha *= FA;
   // 依赖线：别的插件 → test-gate；拔掉时线头掉下来垂着、晃一晃
   const dp = dsK(tau, C3W(2, '别的插件') + .15, .45);
   if (dp > 0 && oA > 0) { const a = [O.x - O.w / 2 + 18, O.y + 2], att = c3Loc(T.x, T.y, T.s, T.rot, C3NW / 2 - 12, 20, T.lift), d = sm(0, .25, yk);
@@ -198,17 +204,17 @@ function c3Focus(c, tau, FA) {
     if (nA > 0) dsMono(c, String(i + 1), x, C3TALY + C3TH / 2 + 34, { size: 22, align: 'center', color: C3AC, al: nA * (1 - sm(.1, .5, peel)) }); });
   // 「悬空」标签
   const hk = dsPop(tau, C3W(3, '悬空') - .1) * (1 - back);
-  if (hk > 0) dsLabel(c, '悬空', C3F.x, 610, { size: 32, k: hk, ink: P.red, seed: 3260, rot: -.03 });
+  if (hk > 0) dsLabel(c, '悬空', C3F.x, 662, { size: 32, k: hk, ink: P.red, seed: 3260, rot: -.03 });
   // 关键词：有状态（第 1 句）→ 可逆副作用（第 5 句）
-  dsLabel(c, '有状态', C3F.x, 222, { size: 32, ink: C3AC, k: dsPop(tau, C3W(1, '有状态') - .1), al: 1 - dsK(tau, C3T(3), .3), seed: 3270 });
-  dsLabel(c, '可逆副作用', C3F.x, 222, { size: 34, ink: C3AC, k: dsPop(tau, C3W(5, '可逆') - .1), seed: 3271 });
+  dsLabel(c, '有状态', C3F.x, 272, { size: 32, ink: C3AC, k: dsPop(tau, C3W(1, '有状态') - .1), al: 1 - dsK(tau, C3T(3), .3), seed: 3270 });
+  dsLabel(c, '可逆副作用', C3F.x, 272, { size: 34, ink: C3AC, k: dsPop(tau, C3W(5, '可逆') - .1), seed: 3271 });
   // 第 5 句：register() 的真代码
   const ck = dsPop(tau, C3W(5, '每一次') - .15);
   if (ck > 0) { const cw = Math.max(...C3CODE.map(l => dsMonoW(c, l, 18))) + 48, cx = 1424 - cw;
     c.save(); c.letterSpacing = '0.01px';   // 等宽字体的连字（=> 变成箭头）关掉
-    dsCodeSlip(c, cx, 250, cw, C3CODE, { size: 18, lh: 28, title: 'vendor/cordis/src/events.ts', k: ck, seed: 3280, accent: C3AC, mark: ['effect', 'unregister'],
+    dsCodeSlip(c, cx, 262, cw, C3CODE, { size: 18, lh: 28, title: 'vendor/cordis/src/events.ts', k: ck, seed: 3280, accent: C3AC, mark: ['effect', 'unregister'],
       p: clamp((tau - C3W(5, '每一次')) / 1.3, 0, 1), hl: { 2: dsK(tau, C3W(5, '每一次') + 1.3, .3), 4: dsK(tau, C3W(5, '撤销') - .1, .3) } }); c.restore();
-    dsLabel(c, '节选', 1380, 252, { size: 24, k: dsPop(tau, C3W(5, '每一次') + .2), rot: .05, seed: 3281 }); }
+    dsLabel(c, '节选', 1380, 264, { size: 24, k: dsPop(tau, C3W(5, '每一次') + .2), rot: .05, seed: 3281 }); }
   // 第 6 句：时间线。左边是贴上的顺序 1、2、3，右边是卸载时揭掉的顺序 3、2、1
   const tl0 = C3W(6, '卸载') - .25, ap = dsK(tau, tl0, .5);
   if (ap > 0) { dsArrow(c, [450, 836], [1400, 836], { p: ap, t, seed: 3290, w: 3 });
@@ -237,7 +243,7 @@ function c3Koishi(c, tau) {
     if (q.k > .3) c3Pin(c, pin, 1, 1 - q.u); if (rk > .3 && q.thr > 0) c3Pin(c, rp); });
   const W = kids[2]; C3KTAL.forEach(([s, dx], j) => c3Tal(c, W.x + dx, W.y + 86, s, { w: 44, h: 136, k: dsPop(tau, w12('插件', -.1 + j * .35)), peel: dsK(tau, w12('卸载', -.1 + (1 - j) * .45), .5), rot: (j ? .04 : -.04), seed: 3530 + j * 5 }));
   dsLabel(c, '4.7', 548, 690, { mono: true, size: 24, k: dsPop(tau, C3W(11, '4.7') - .1), seed: 3540 });
-  dsLabel(c, '热重载', 615, 440, { size: 28, k: dsPop(tau, w12('热重载', -.1)), seed: 3541, rot: .03 });
+  dsLabel(c, '热重载', 615, 440, { size: 28, k: dsPop(tau, w12('热重载', -.1)), al: 1 - dsK(tau, C3T(13) - .2, .3), seed: 3541, rot: .03 });
   c.restore();
 }
 
@@ -268,7 +274,7 @@ function c3Content(c, tau) {
   if (lc < 1) { const B = DS_STAIRCARD, [nx, ny] = C3SL[3];
     dsLoopCard(c, lerp(B.x, nx - C3NW / 2, lc), lerp(B.y, ny - C3NH / 2, lc), lerp(B.w, C3NW, lc), lerp(B.h, C3NH, lc), { al: 1 - sm(.35, .9, lc), accent: P.blue, lift: dsBump(tau, C3W(0, '循环') - .1, .55) }); }
   // 推近 test-gate
-  if (f > 0 && uf < 1) c3Focus(c, tau, 1 - uf);
+  if (f > 0 && tau < C3T(7) + .6) c3Focus(c, tau, 1 - c3Fout(tau));
   // 第 9 句：论文纸条
   const pk = dsPop(tau, C3W(9, '论文') - .1), pA = 1 - dsK(tau, C3T(11) + .3, .4);
   if (pk > 0 && pA > 0) { const ti = 'A Programming Paradigm for Spatiotemporal Composability', sz = 28, tw = zhWidth(c, ti, sz), w = tw + 64, x = 920 - w / 2, y = 758;
