@@ -11,19 +11,22 @@ const { Midi } = pkg;
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
 
 // ===== 每集改这一张表 =====
-// 模板演示用帕秋莉的角色曲：ラクトガール ～ 少女密室（东方红魔乡，ZUN）。扒谱是 touhou-midi-collection 里的 ZUN 原版 MIDI（format 0，480 tpb，原速 154）。
-// 17 honky-tonk piano 全曲主旋律（B 段是双音），24 fiddle 第 9 小节起的副旋律，4 钢琴琶音，16 贝斯。第 0 小节是空的，从第 1 小节取到第 73 小节。
+// 第 7 集主讲是八云蓝，用她的角色曲：少女幻葬 ～ Necro-Fantasy（东方妖妖梦 Extra 面 Boss 曲，ZUN）。扒谱是 touhou-midi-collection 里的 ZUN 原版 MIDI
+// （「16. A Maiden's Illusionary Funeral ~ Necro-Fantasy (ZUN).mid」，format 1，480 tpb，原速 164，2/4 拍；下面的「小节」是本工具按 4 拍一组数的）。
+// 11 trumpet 是主旋律（第 32 组起），15 drawbar organ 在它下面三度平行，当副旋律；3 string ensemble 是长音和弦；5 slap bass 是十六分音符的低音，
+// 太密，用 thin 只留落在整拍上的音。取第 32–63 组（主旋律一整遍，首尾接得上）。
 const SONG = {
-  title: 'ラクトガール ～ 少女密室（东方红魔乡，ZUN）',
+  title: '少女幻葬 ～ Necro-Fantasy（东方妖妖梦，ZUN）',
   source: 'touhou-midi-collection 的 ZUN 原版 MIDI',
-  bars: [1, 73],   // 取哪几小节（含两端）；一遍放完从头再来，所以挑一段首尾能接上的
+  bars: [32, 63],  // 取哪几小节（含两端）；一遍放完从头再来，所以挑一段首尾能接上的
   bpm: 92,         // 放慢后的速度
   pick: {          // part 名 → [[轨号, [小节范围]...]...]；小节范围用原曲的小节号
-    mel: [[17, [1, 73]]],
-    counter: [[24, [1, 73]]],
-    piano: [[4, [1, 73]]],
-    bass: [[16, [1, 73]]],
+    mel: [[11, [32, 63]]],
+    counter: [[15, [32, 63]]],
+    piano: [[3, [32, 63]]],
+    bass: [[5, [32, 63]]],
   },
+  thin: { bass: 1 },   // part 名 → 拍数：只留落在这个拍网格上的音（同一拍取最低的一个），时值拉到一格
 };
 // ===== 表到此为止 =====
 
@@ -56,7 +59,8 @@ for (const [name, picks] of Object.entries(SONG.pick)) {
     out.push([+(n.ticks / ppq - b0 * B).toFixed(3), +(n.durationTicks / ppq).toFixed(3), n.midi, +n.velocity.toFixed(2)]);
   }
   out.sort((a, b) => a[0] - b[0] || a[2] - b[2]);
-  parts[name] = out;
+  const g = (SONG.thin || {})[name];
+  parts[name] = !g ? out : out.filter((n, i) => Math.abs(n[0] / g - Math.round(n[0] / g)) < .02 && !(i && Math.abs(out[i - 1][0] - n[0]) < .02)).map(([b, , m, v]) => [b, g, m, v]);
 }
 const lenBeats = (b1 - b0 + 1) * B;
 const js = `'use strict';\n// 由 tools/bgm.mjs 生成，别手改。原曲：${SONG.title}；音符取自 ${SONG.source}，编配在 core.js 的 score()。\n// 每个音：[拍, 时值（拍）, MIDI 音高, 力度 0..1]\nconst BGM = ${JSON.stringify({ lenBeats, bpm: SONG.bpm, parts })};\n`;

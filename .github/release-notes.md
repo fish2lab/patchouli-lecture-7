@@ -1,21 +1,12 @@
-纯代码做一集东方视频 · Touhou, Drawn in Code · コードで描く東方
+帕秋莉讲座 · 第 7 集：会给自己装插件的 agent（DeepSeek Harness 设计拆解 · 上）
 
-只用 JavaScript 和 Canvas 2D 做一集有配音、有配乐的东方同人科普视频的模板。没有图片素材，没有 AI 生图。
+八云蓝主讲、帕秋莉提问，约 8 分钟：agent = 模型 + harness；harness 扩展能力的三级阶梯（声明式 → 进程内中间件 → 可组合内核）；DSH 连 agent loop 都是一个能换掉的插件，靠的是 Cordis 的可逆副作用和依赖响应；地基不等于进化算法，验证器要放在可进化的集合之外。
 
 **附件**
 
-- `touhou-code-video-template.mp4`：97 秒演示片，1920×1080，30fps，带油库里语音和八音盒 BGM，由 CI 用无头 Chromium 逐帧渲染。
-- `touhou-code-video-template.html`：同一部片子的单文件网页版，浏览器打开就能实时播放，拖到任意一秒。
+- `patchouli-lecture-7.mp4`：成片，1920×1080，30fps，带油库里语音和八音盒 BGM，由 CI 用无头 Chromium 逐帧渲染。
+- `patchouli-lecture-7.html`：同一部片子的单文件网页版，浏览器打开就能实时播放，拖到任意一秒。
 
-**这一版有什么**
+**出处**：deepseek-ai/deepseek-harness（0.2.1-rc.2）的 docs/architecture.md、docs/cordis-primer.md 和源码；arXiv 2608.25512；Koishi v4.7 更新日志与生命周期文档；Claude Code mods 文档；pi extensions 文档；鸭哥《深入拆解 DSH》；cofy-x/dsh-evolver；dsh-auto-evolve。详见仓库 docs/方案.md。
 
-- 十四个剪纸 Q 版角色，同一套约 2.4 头身的比例：博丽灵梦、雾雨魔理沙、芙兰朵露、古明地恋、魂魄妖梦、十六夜咲夜、蕾米莉亚、古明地觉、藤原妹红、琪露诺（2024–2026 三届东方人气投票前十），以及帕秋莉、红美铃、八云紫、八云蓝。
-- 逐帧引擎：每帧只由时间决定，可以跳到任意一秒，也可以切段并行渲染。
-- 十个可复用的亮点特效、AquesTalk 语音工具链、角色曲改编 BGM 工具、抽帧和重叠检查脚本。
-- 给 AI agent 读的 `AGENTS.md` 和 `llms.txt`。
-
-**English.** A template for making a voiced Touhou Project fan explainer video in pure JavaScript + Canvas 2D: 14 procedural paper-cut chibi characters, AquesTalk (Yukkuri) voice, music-box BGM, deterministic MP4 renderer. No image assets, no AI art. Attached: the 97-second demo (MP4) and a single-file HTML version that plays live in the browser.
-
-项目页 / Project page: https://fish2lab.github.io/touhou-code-video-template/
-
-东方 Project 角色版权属于上海爱丽丝幻乐团（ZUN），本仓库是同人工具，不是官方内容。
+**许可**：代码 MIT；字体霞鹜文楷（OFL）；配音 AquesTalk（株式会社アクエスト）；BGM 为东方妖妖梦「少女幻葬 ～ Necro-Fantasy」（ZUN）的八音盒改编，音符取自 touhou-midi-collection 的 ZUN 原版 MIDI。东方 Project 角色版权属于上海爱丽丝幻乐团（ZUN），本片是同人作品。

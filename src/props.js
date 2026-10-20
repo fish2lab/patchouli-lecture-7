@@ -14,7 +14,7 @@
 //           dsBrace(c, x0, x1, y, o)                     手画花括号
 //   字      zh(…)（kit）中文；dsMono(c, text, x, y, o) 等宽英文 / 事件名；dsCode(c, lines, x, y, o) 代码
 //   小物    dsToken 走动的小纸圆片；dsSeal 朱印；dsPin 图钉（kit 的 brassPin）
-//   人物    dsCast(c, tau, L, LINES, o)                  八云蓝站在右边讲；帕秋莉在她自己的台词里从左边进来
+//   人物    dsCast(c, tau, L, LINES, o)                  八云蓝站在右边讲；帕秋莉在她自己的台词里从左边进来（o.pchPeek = { x, y } 改成从纸边探头）
 //   台词    dsSeq(t0, items) 默认八云蓝说；dsWordT(line, word) 念到某个词的时刻
 
 const EP_HOST = 'ran';   // 主讲人（film.js 用：字幕里不给她加名字）
@@ -133,6 +133,8 @@ function dsCodeSlip(c, x, y, w, lines, o = {}) { const { size = 22, lh = size * 
   return h; }
 
 // ===================== 小物 =====================
+// dsDot：一个实心小圆点
+function dsDot(c, x, y, r, color = P.ink, o = {}) { const al = o.al ?? 1; if (al <= 0 || r <= 0) return; c.save(); c.globalAlpha *= al; c.fillStyle = color; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.restore(); }
 // dsToken：一枚走动的小纸圆片（流程里「正在跑」的那一步）
 function dsToken(c, x, y, r = 14, color = P.moon, o = {}) { if ((o.al ?? 1) <= 0) return; c.save(); c.globalAlpha *= o.al ?? 1; cutPaper(c, circPts(x, y, r, 20), color, { seed: o.seed ?? 7700, step: 6, blur: 3, sx: 1, sy: 2, grain: .05 }); c.restore(); }
 // dsSeal：朱印（方形，纸色字），k 0..1 盖下去
@@ -151,7 +153,10 @@ function dsSeal(c, x, y, text, k, o = {}) { const { s = 86, seed = 7800 } = o; i
 // 帕秋莉在她自己的台词（前 0.4 秒到后 0.9 秒，o.pchWins 可加）从左边走进来、说完退出去。o.pchPose 同 ranPose
 function dsCast(c, tau, L, LINES, o = {}) {
   const pw = LINES.filter(l => (l[3] || {}).who === 'patchouli').map(l => [l[0] - .4, l[1] + .9]).concat(o.pchWins || []), pv = dsWin(tau, pw, .45, .5);
-  if (pv > 0) { const pose = typeof o.pchPose === 'function' ? o.pchPose(tau) : o.pchPose || 'stand';
+  if (pv > 0 && o.pchPeek) { const q = o.pchPeek;   // 探头：从 q.y 那条纸边下面升上来，只露帽子、脸和两只手
+    c.save(); c.beginPath(); c.rect(0, 0, W, q.y + 1); c.clip();
+    drawPatchouli(c, { x: q.x, y: q.y + 2 + (1 - easeOut(pv)) * 230, h: q.h || 460, pose: 'peek', mood: moodOf(L, 'patchouli', 'normal'), mouth: mouthOf(L, 'patchouli'), blink: blinkAt(tau), t: tau }); c.restore(); }
+  else if (pv > 0) { const pose = typeof o.pchPose === 'function' ? o.pchPose(tau) : o.pchPose || 'stand';
     drawPatchouli(c, { ...DS.pch, ...(o.pch || {}), x: (o.pch?.x ?? DS.pch.x) - (1 - easeOut(pv)) * 380, pose, mood: moodOf(L, 'patchouli', 'normal'), mouth: mouthOf(L, 'patchouli'), blink: blinkAt(tau), t: tau }); }
   if (o.noRan) return;
   const rp = typeof o.ranPose === 'function' ? o.ranPose(tau) : o.ranPose || 'stand';
@@ -243,3 +248,20 @@ function dsLock(c, x, y, s = 70, o = {}) { const { open = 0, k = 1, al = 1, seed
     rline(c, Array.from({ length: 21 }, (_, i) => { const a = Math.PI + i / 20 * Math.PI; return [x + Math.cos(a) * s * .26, y - s * .1 - lift + Math.sin(a) * s * .3]; }).concat([[x + s * .26, y - s * .1 - lift + (open > 0 ? 0 : s * .12)]]), { w: s * .09, color: P.g3, seed, amp: .3 });
     cutPaper(c, rectPts(x - s * .4, y - s * .12, s * .8, s * .62, 6), P.gold, { seed: seed + 1, step: 10, blur: 3 });
     c.fillStyle = P.ink2; c.beginPath(); c.arc(x, y + s * .12, s * .07, 0, TAU); c.fill(); c.fillRect(x - s * .025, y + s * .12, s * .05, s * .14); c.restore(); }); }
+
+// ===================== 开场、结尾：魔导书开合 =====================
+// dsBook：u = 0 摊开（spread），u = 1 合上（封面盖在右半边）；中间封面绕书脊翻。o = { cover: [大字, 小字], small 封面小字 }
+function dsBook(c, tau, u, o = {}) {
+  const { cover = ['帕秋莉讲座', '第七集'] } = o;
+  if (u <= 0) { spread(c, tau); return; }
+  desk(c);
+  c.save(); c.beginPath(); c.rect(CX - 14, 0, W, H); c.clip(); spread(c, tau); c.restore();   // 右页先画出来，封面盖在上面
+  const R = BOOK.R, w = R.w + 34, a = (1 - clamp(u, 0, 1)) * Math.PI, cw = w * Math.cos(a), lift = Math.sin(a) * 40;
+  if (cw > 2) { c.save(); c.beginPath(); c.moveTo(CX, 0); c.lineTo(CX + cw, -lift); c.lineTo(CX + cw, H + lift); c.lineTo(CX, H); c.closePath(); c.clip();
+    c.translate(CX, 0); c.scale(cw / w, 1); c.translate(-CX, 0); grimoireCover(c, CX - 2, w, { clasp: null });
+    zh(c, cover[0], CX + w / 2, 470, { size: cover[0].length > 6 ? 54 : 64, align: 'center', color: GRIMOIRE.gold });
+    if (cover[1]) zh(c, cover[1], CX + w / 2, 556, { size: 36, align: 'center', color: alpha(GRIMOIRE.gold, .85) });
+    if (o.small) zh(c, o.small, CX + w / 2, 640, { size: 26, align: 'center', color: alpha(GRIMOIRE.gold, .7) }); c.restore(); }
+  else if (cw < -2) { const pts = [[CX, BOOK.y + 18], [CX + cw, BOOK.y + 18 - lift], [CX + cw, BOOK.y + BOOK.h - 18 + lift], [CX, BOOK.y + BOOK.h - 18]];
+    c.save(); c.shadowColor = 'rgba(30,20,10,.3)'; c.shadowBlur = 24; c.shadowOffsetY = 8; c.fillStyle = mix(BOOK.page2, BOOK.page, sm(.6, 1, 1 - u)); c.fill(polyPath(pts)); c.restore(); }
+}
