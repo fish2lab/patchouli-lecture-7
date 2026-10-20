@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
           npx playwright install --with-deps chromium
           node tools/render.mjs --jobs 4
-          cp dist/index.html touhou-code-video-template.html
+          cp dist/index.html patchouli-lecture-7.html
           echo "TAG=v$(node -p 'require("./package.json").version')" >> $GITHUB_ENV
       - name: release (release only)
         if: env.RELEASE == 'true'
@@ -42,12 +42,12 @@ jobs:
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || env.TAG }}
           target_commitish: ${{ github.sha }}
-          name: 模板演示 ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || env.TAG }}
+          name: 帕秋莉讲座第 7 集 ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || env.TAG }}
           prerelease: true
           body_path: .github/release-notes.md
           files: |
-            touhou-code-video-template.html
-            out/touhou-code-video-template.mp4
+            patchouli-lecture-7.html
+            out/patchouli-lecture-7.mp4
       - name: assemble site (pages only)
         if: github.ref == 'refs/heads/main' && vars.ENABLE_PAGES == 'true'
         run: |

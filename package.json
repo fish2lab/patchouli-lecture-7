@@ -1,8 +1,8 @@
 {
-  "name": "touhou-code-video-template",
+  "name": "patchouli-lecture-7",
   "private": true,
   "version": "0.1.0",
-  "description": "纯代码做一集东方 Project 科普视频的模板 / Touhou, drawn in code: a template for a voiced Touhou fan explainer video in pure JavaScript + Canvas 2D (14 procedural paper-cut characters, AquesTalk voice, music-box BGM, MP4 renderer; no image assets, no AI art)",
+  "description": "帕秋莉讲座第 7 集：连 agent loop 都是插件——DeepSeek Harness 设计拆解（上）。纯 JavaScript + Canvas 2D 绘制的剪纸东方同人科普视频，小米 MiMo TTS 配音，八云蓝角色曲八音盒 BGM",
   "keywords": [
     "touhou",
     "touhou-project",
@@ -22,10 +22,10 @@
     "ai-agents",
     "template"
   ],
-  "homepage": "https://fish2lab.github.io/touhou-code-video-template/",
+  "homepage": "https://fish2lab.github.io/patchouli-lecture-7/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fish2lab/touhou-code-video-template.git"
+    "url": "git+https://github.com/fish2lab/patchouli-lecture-7.git"
   },
   "license": "MIT",
   "author": "fish2lab (https://x.com/fish2lab)",
