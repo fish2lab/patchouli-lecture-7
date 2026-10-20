@@ -1,0 +1,48 @@
+{
+  "name": "touhou-code-video-template",
+  "private": true,
+  "version": "0.1.0",
+  "description": "纯代码做一集东方 Project 科普视频的模板 / Touhou, drawn in code: a template for a voiced Touhou fan explainer video in pure JavaScript + Canvas 2D (14 procedural paper-cut characters, AquesTalk voice, music-box BGM, MP4 renderer; no image assets, no AI art)",
+  "keywords": [
+    "touhou",
+    "touhou-project",
+    "東方Project",
+    "creative-coding",
+    "generative-art",
+    "procedural-animation",
+    "canvas",
+    "canvas2d",
+    "paper-cut",
+    "chibi",
+    "yukkuri",
+    "aquestalk",
+    "explainer-video",
+    "video-generation",
+    "deterministic-rendering",
+    "ai-agents",
+    "template"
+  ],
+  "homepage": "https://fish2lab.github.io/touhou-code-video-template/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fish2lab/touhou-code-video-template.git"
+  },
+  "license": "MIT",
+  "author": "fish2lab (https://x.com/fish2lab)",
+  "scripts": {
+    "font": "node tools/fetch-font.mjs",
+    "dev": "node tools/frames.mjs --grid 24",
+    "frames": "node tools/frames.mjs",
+    "overlap": "node tools/overlap.mjs",
+    "build": "node tools/build.mjs",
+    "voice": "node tools/voice.mjs",
+    "render": "node tools/render.mjs",
+    "bgm": "node tools/bgm.mjs"
+  },
+  "devDependencies": {
+    "@tonejs/midi": "^2.0.28",
+    "aquestalk.js": "^1.0.7",
+    "pinyin-pro": "^3.29.4",
+    "playwright": "1.56.1"
+  }
+}
