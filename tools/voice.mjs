@@ -33,10 +33,14 @@ const VOICES = {
 };
 const MOODS = { happy: '带一点轻快的笑意', proud: '从容笃定，带一点得意', awkward: '有点无奈', surprised: '有点意外', smug: '带一点调侃',
   annoyed: '略带不满地追问', flustered: '有点着急', smile: '轻松满足', sad: '有点低落' };
-// 念不准的词 → 送去合成的写法
-const SAY = {};
-const SAY_RE = Object.keys(SAY).length ? new RegExp(Object.keys(SAY).sort((a, b) => b.length - a.length).map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g') : null;
-const say = t => SAY_RE ? t.replace(SAY_RE, m => SAY[m]) : t;
+// 念不准的词 → 送去合成的写法（第 7 集用本地 Whisper 转写回来比对，换了几种写法挑出来的）
+const SAY = {
+  'Koishi': 'こいし',   // 拉丁字母怎么写都念不成 ko-i-shi，假名可以
+  'ReAct': 'React',     // ReAct 会念成两截
+  'mod': 'Mod',         // 小写会念成 morn
+};
+const SAY_RE = new RegExp(Object.keys(SAY).sort((a, b) => b.length - a.length).map(s => `(?<![A-Za-z])${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`).join('|'), 'g');
+const say = t => t.replace(SAY_RE, m => SAY[m]);
 
 // ---- MiMo 请求 ----
 async function tts(model, text, user, voice) {
