@@ -75,7 +75,7 @@ function h0Draw(c, tau, L) {
         if (mv < 1) rline(c, [[ax + 20, ay + 20], [sx + 20, sy + 6]], { w: 2, color: alpha(H0AC, .6), seed: 8065, dash: [6, 6], p: wp }); } } }
   // ---- 第 3 句：两页底下同一块 Cordis（越过书脊连成一块） ----
   const cK = dsPop(tau, H0W(3, 'Cordis') - .2, .45) * show;
-  if (cK > 0) { dsCordisSlab(c, 130, 660, 1310, 96, { k: cK, sub: '' });
+  if (cK > 0) { dsCordisSlab(c, 400, 660, 1040, 96, { k: cK, sub: '' });   // 左端留出帕秋莉探头的那一角
     [[H0KW[0] + H0KW[2] / 2, H0KW[1] + H0KW[3]], [H0DW[0] + H0DW[2] / 2, H0DW[1] + H0DW[3]]].forEach(([x, y], i) => rline(c, [[x, y + 4], [x, 656]], { w: 2.4, color: P.ink2, p: cK, seed: 8070 + i, dash: [8, 6] })); }
   // ---- 第 5、6 句：动手的人换了：人 → 模型 ----
   const swK = dsK(tau, H0T(5), .4) * show;

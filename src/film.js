@@ -43,7 +43,8 @@ if (Q.has('bbox') || Q.has('nochar')) {
   window.__boxes = [];
   const wrap = (fn, who) => (c, o = {}) => {
     const h = o.h || (who === 'cirno' ? 460 : who === 'ran' ? 500 : 520), w = h * W0[who], x = o.x || 0, y = o.y || 0, m = c.getTransform(), al = c.globalAlpha;
-    const pts = [[x - w / 2, y - h], [x + w / 2, y - h], [x - w / 2, y], [x + w / 2, y]].map(([px, py]) => [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f]);
+    const vh = o.pose === 'peek' ? h * .45 : h;   // 探头只露帽子、头和手，约 0.45h 高
+    const pts = [[x - w / 2, y - vh], [x + w / 2, y - vh], [x - w / 2, y], [x + w / 2, y]].map(([px, py]) => [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f]);
     const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     if (al > .3) __boxes.push({ who, x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) });
     let r; if (noChar) { c.save(); c.globalAlpha = 0; r = fn(c, o); c.restore(); } else r = fn(c, o);   // 场景会用返回的锚点，照样调用、只是不画
