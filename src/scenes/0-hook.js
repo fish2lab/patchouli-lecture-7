@@ -13,5 +13,5 @@ const H0LINES = dsSeq(.8, [
 ]);
 const H0T = i => H0LINES[i][0], H0E = i => H0LINES[i][1];
 const H0DUR = H0E(H0LINES.length - 1) + 1.6;
-function h0Draw(c, tau, L) { spread(c, tau); dsRan(c, tau, L); dsPch(c, tau, L); }
+function h0Draw(c, tau, L) { dsPage(c, tau, '第零页 · 施工中'); dsCast(c, tau, L, H0LINES); }
 scene({ order: 0, key: 'hook', title: '钩子', dur: H0DUR, lines: H0LINES, fn: h0Draw, noFlip: true });

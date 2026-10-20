@@ -17,5 +17,5 @@ const M5LINES = dsSeq(.8, [
 ]);
 const M5T = i => M5LINES[i][0], M5E = i => M5LINES[i][1];
 const M5DUR = M5E(M5LINES.length - 1) + 1.2;
-function m5Draw(c, tau, L) { spread(c, tau); dsSlate(c, DS.wide); dsRan(c, tau, L, DS.ranS); dsPch(c, tau, L, DS.pchS); }
+function m5Draw(c, tau, L) { dsPage(c, tau, '第五页 · 施工中'); dsCast(c, tau, L, M5LINES); }
 scene({ order: 5, key: 'demo', title: '同题三解', dur: M5DUR, lines: M5LINES, fn: m5Draw, noFlip: true });

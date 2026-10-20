@@ -11,5 +11,5 @@ const N6LINES = dsSeq(.8, [
 ]);
 const N6T = i => N6LINES[i][0], N6E = i => N6LINES[i][1];
 const N6DUR = N6E(N6LINES.length - 1) + 2.2;
-function n6Draw(c, tau, L) { spread(c, tau); dsSlate(c, DS.slate); dsRan(c, tau, L); dsPch(c, tau, L); }
+function n6Draw(c, tau, L) { dsPage(c, tau, '结尾 · 施工中'); dsCast(c, tau, L, N6LINES); }
 scene({ order: 6, key: 'ending', title: '结尾', dur: N6DUR, lines: N6LINES, fn: n6Draw, noFlip: true });

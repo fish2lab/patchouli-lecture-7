@@ -19,5 +19,5 @@ const C3LINES = dsSeq(.8, [
 ]);
 const C3T = i => C3LINES[i][0], C3E = i => C3LINES[i][1];
 const C3DUR = C3E(C3LINES.length - 1) + 1.6;
-function c3Draw(c, tau, L) { spread(c, tau); dsSlate(c, DS.wide); dsRan(c, tau, L, DS.ranS); dsPch(c, tau, L, DS.pchS); }
+function c3Draw(c, tau, L) { dsPage(c, tau, '第三页 · 施工中'); dsCast(c, tau, L, C3LINES); }
 scene({ order: 3, key: 'cordis', title: 'Cordis', dur: C3DUR, lines: C3LINES, fn: c3Draw, noFlip: true });

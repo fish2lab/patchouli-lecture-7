@@ -19,5 +19,5 @@ const D2LINES = dsSeq(.8, [
 ]);
 const D2T = i => D2LINES[i][0], D2E = i => D2LINES[i][1];
 const D2DUR = D2E(D2LINES.length - 1) + 1.2;
-function d2Draw(c, tau, L) { spread(c, tau); dsSlate(c, DS.slate); dsRan(c, tau, L); dsPch(c, tau, L); }
+function d2Draw(c, tau, L) { dsPage(c, tau, '第二页 · 施工中'); dsCast(c, tau, L, D2LINES); }
 scene({ order: 2, key: 'ladder', title: '阶梯', dur: D2DUR, lines: D2LINES, fn: d2Draw, noFlip: true });

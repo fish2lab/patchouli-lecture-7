@@ -17,5 +17,5 @@ const E4LINES = dsSeq(.8, [
 ]);
 const E4T = i => E4LINES[i][0], E4E = i => E4LINES[i][1];
 const E4DUR = E4E(E4LINES.length - 1) + 1.2;
-function e4Draw(c, tau, L) { spread(c, tau); dsSlate(c, DS.slate); dsRan(c, tau, L); dsPch(c, tau, L); }
+function e4Draw(c, tau, L) { dsPage(c, tau, '第四页 · 施工中'); dsCast(c, tau, L, E4LINES); }
 scene({ order: 4, key: 'evolve', title: '自进化', dur: E4DUR, lines: E4LINES, fn: e4Draw, noFlip: true });
